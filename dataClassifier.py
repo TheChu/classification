@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -72,13 +72,57 @@ def enhancedFeatureExtractorDigit(datum):
     for this datum (datum is of type samples.Datum).
 
     ## DESCRIBE YOUR ENHANCED FEATURES HERE...
-
+    I calculate the number of whitespace regions, and add features whose values
+    depend on the number of regions. For example, the feature "2regions" has
+    value 1 only if there are 2 whitespace regions.
     ##
     """
     features =  basicFeatureExtractorDigit(datum)
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    numWhiteRegions = 0
+    toVisit = features.copy()
+
+    # Visit every pixel
+    for f in toVisit.keys():
+
+        # If we have already visited this pixel there is nothing to do here
+        if f not in toVisit:
+            continue
+
+        # If this pixel is whitespace, we increment numWhiteRegions and expanded
+        # its neighbors (and its neighbors' neighbors, etc.) until we have
+        # visited every pixel in the whitespace region.
+        if toVisit.pop(f) == 0:
+            numWhiteRegions += 1
+            nVectors = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,1),(1,-1),(-1,-1)]
+            neighbors = [(f[0] + v[0], f[1] + v[1]) for v in nVectors]
+            neighbors = [n for n in neighbors if n in toVisit]
+            whiteRegion = util.Counter()
+            for n in neighbors:
+                whiteRegion[n] = toVisit[n]
+            while whiteRegion:
+                n = whiteRegion.keys()[0]
+                whiteRegion.pop(n)
+                if toVisit.pop(n) == 0:
+                    expanded = [(n[0] + v[0], n[1] + v[1]) for v in nVectors]
+                    expanded = [e for e in expanded if e in toVisit]
+                    for e in expanded:
+                        whiteRegion[e] = toVisit[e]
+
+    # Add new features
+    features["1region"] = 0
+    features["2regions"] = 0
+    features["3regions"] = 0
+    features["otherregions"] = 0
+    if numWhiteRegions == 1:
+        features["1region"] = 1
+    elif numWhiteRegions == 2:
+        features["2regions"] = 1
+    elif numWhiteRegions == 3:
+        features["3regions"] = 1
+    else:
+        features["otherregions"] = 1
 
     return features
 
@@ -364,7 +408,7 @@ def runClassifier(args, options):
     featureFunction = args['featureFunction']
     classifier = args['classifier']
     printImage = args['printImage']
-    
+
     # Load data
     numTraining = options.training
     numTest = options.test
