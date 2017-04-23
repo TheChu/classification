@@ -168,7 +168,25 @@ def enhancedPacmanFeatures(state, action):
     """
     features = util.Counter()
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    successor = state.generateSuccessor(0, action)
+    position = successor.getPacmanPosition()
+    ghostStates = successor.getGhostStates()
+    foodList = successor.getFood().asList()
+
+    ghostDistances = map(lambda xy:
+                        abs(position[0] - int(xy.getPosition()[0])) + abs(position[1] - int(xy.getPosition()[1])),
+                        ghostStates)
+    closestGhostDist = min(ghostDistances)
+    features["closestGhostDist"] = closestGhostDist
+
+    closestFoodDist = 0
+    if len(foodList) > 0:
+        foodDistances = map(lambda xy:
+                            abs(position[0] - xy[0]) + abs(position[1] - xy[1]),
+                            foodList)
+        closestFoodDist = min(foodDistances)
+    features["closestFoodDist"] = closestFoodDist
+
     return features
 
 
